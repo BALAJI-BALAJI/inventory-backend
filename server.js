@@ -9,6 +9,7 @@ import productRoutes from "./routes/products.js";
 import supplierRoutes from "./routes/suppliers.js";
 import categoryRoutes from "./routes/categories.js";
 import transactionRoutes from "./routes/transactions.js";
+import staffRoutes from "./routes/users.js";
 
 dotenv.config();
 const app = express();
@@ -22,6 +23,7 @@ app.use("/products", productRoutes);
 app.use("/suppliers", supplierRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/transactions", transactionRoutes);
+app.use("/staff", staffRoutes);
 
 mongoose
   .connect(process.env.MONGO_URI)
