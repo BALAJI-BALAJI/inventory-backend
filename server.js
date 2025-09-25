@@ -9,12 +9,21 @@ import productRoutes from "./routes/products.js";
 import supplierRoutes from "./routes/suppliers.js";
 import categoryRoutes from "./routes/categories.js";
 import transactionRoutes from "./routes/transactions.js";
-import staffRoutes from "./routes/users.js";
+import staffRoutes from "./routes/staff.js"; // includes both CRUD & login
 
 dotenv.config();
 const app = express();
 
-app.use(cors());
+// ✅ CORS middleware for frontend
+app.use(
+  cors({
+    origin: "http://localhost:5173", // your React frontend URL
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
+  })
+);
+
+// Parse JSON
 app.use(express.json());
 
 // Routes
@@ -23,14 +32,18 @@ app.use("/products", productRoutes);
 app.use("/suppliers", supplierRoutes);
 app.use("/categories", categoryRoutes);
 app.use("/transactions", transactionRoutes);
-app.use("/staff", staffRoutes);
+app.use("/staff", staffRoutes); // admin CRUD + staff login
 
+// Connect to MongoDB
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  })
   .then(() => {
-    console.log("MongoDB connected");
+    console.log("✅ MongoDB connected");
     app.listen(process.env.PORT, () =>
-      console.log(`Server running on port ${process.env.PORT}`)
+      console.log(`🚀 Server running on http://localhost:${process.env.PORT}`)
     );
   })
-  .catch((err) => console.log(err));
+  .catch((err) => console.error("❌ DB connection error:", err));
