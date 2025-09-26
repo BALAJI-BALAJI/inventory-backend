@@ -3,28 +3,25 @@ import Staff from "../models/Staff.js";
 
 const router = express.Router();
 
-// ➤ Create staff
+// ➤ Admin creates staff
 router.post("/", async (req, res) => {
-  const { name, phone, username, password, role } = req.body;
+  const { name, phone, username, password } = req.body;
 
   if (!name || !phone || !username || !password) {
-    return res.status(400).json({ error: "All fields except role are required" });
+    return res.status(400).json({ error: "All fields are required" });
   }
 
   try {
-    const existingUser = await Staff.findOne({ username });
-    if (existingUser) {
+    const exists = await Staff.findOne({ username });
+    if (exists) {
       return res.status(400).json({ error: "Username already exists" });
     }
 
-    const staff = new Staff({ name, phone, username, password, role });
+    const staff = new Staff({ name, phone, username, password, role: "staff" });
     await staff.save();
-
-    // ✅ Include password in response
     res.status(201).json(staff);
   } catch (err) {
-    console.error("Error saving staff:", err.message);
-    res.status(500).json({ error: "Failed to add staff" });
+    res.status(500).json({ error: "Failed to create staff" });
   }
 });
 
@@ -32,58 +29,56 @@ router.post("/", async (req, res) => {
 router.post("/login", async (req, res) => {
   const { identifier, password } = req.body;
 
-  if (!identifier || !password) {
-    return res.status(400).json({ error: "Identifier and password are required" });
-  }
+  if (!identifier || !password) return res.status(400).json({ error: "All fields are required" });
 
   try {
-    const user = await Staff.findOne({
+    const staff = await Staff.findOne({
       $or: [{ username: identifier }, { phone: identifier }],
     });
 
-    if (!user || user.password !== password) {
-      return res.status(400).json({ error: "Invalid credentials" });
+    if (!staff || staff.password !== password) {
+      return res.status(200).json({ success: false, message: "Invalid credentials" });
     }
 
-    // ✅ Include password in login response
-    res.json({
-      id: user._id,
-      name: user.name,
-      phone: user.phone,
-      username: user.username,
-      role: user.role,
-      password: user.password, // included now
+    res.status(200).json({
+      success: true,
+      staff: {
+        id: staff._id,
+        name: staff.name,
+        username: staff.username,
+        phone: staff.phone,
+        role: staff.role,
+      },
     });
   } catch (err) {
-    console.error("Login error:", err.message);
-    res.status(500).json({ error: "Login failed" });
+    console.error(err);
+    res.status(500).json({ success: false, message: "Login failed" });
   }
 });
 
-// ➤ Get all staff
-router.get("/", async (req, res) => {
-  try {
-    // ✅ Include password for all staff
-    const staff = await Staff.find(); 
-    res.json(staff);
-  } catch (err) {
-    console.error("Error fetching staff:", err.message);
-    res.status(500).json({ error: "Failed to fetch staff" });
-  }
-});
-
-// ➤ Delete staff by id
+// ➤ Delete a staff by ID
 router.delete("/:id", async (req, res) => {
+  const { id } = req.params;
+
   try {
-    const deletedStaff = await Staff.findByIdAndDelete(req.params.id);
-    if (!deletedStaff) {
+    const staff = await Staff.findByIdAndDelete(id);
+
+    if (!staff) {
       return res.status(404).json({ error: "Staff not found" });
     }
-    res.json({ message: "Staff deleted" });
+
+    res.json({ success: true, message: "Staff deleted successfully" });
   } catch (err) {
-    console.error("Error deleting staff:", err.message);
     res.status(500).json({ error: "Failed to delete staff" });
   }
+});
+
+
+
+// ➤ Get all staff (for Admin only)
+router.get("/", async (req, res) => {
+  const staff = await Staff.find();
+  res.json(staff);
 });
 
 export default router;
