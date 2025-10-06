@@ -16,7 +16,7 @@ const app = express();
 
 // ✅ Middleware
 app.use(cors({
-  origin: "*", // React frontend URL
+  origin: "https://personalinventory.netlify.app", // React frontend URL
   methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
   credentials: true,
 }));
